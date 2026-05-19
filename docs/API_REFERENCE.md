@@ -4,7 +4,7 @@
 
 目录
 
-- ECSEngine（高层）
+- RECS（高层）
 - EntityPool / EntityPoolView
 - Relation / RelationView / SparseRelationEdges / DenseRelation
 - 工具函数（to_indices、to_mask、dense_to_relation）
@@ -12,18 +12,18 @@
 
 ---
 
-ECSEngine（高层）
+RECS（高层）
 
 构造
 
 ```
-ECSEngine(capacity, attr_dtypes)
+RECS(capacity, attr_dtypes)
 ```
 
 - capacity: 初始容量（整数）。
 - attr_dtypes: 字典，键为属性名，值为 numpy dtype（字符串或 dtype 对象）。
 
-说明：ECSEngine 是对 `EntityPool` 的包装，保持向后兼容（会把内部池的 `d` 暴露为 `engine.d`）。
+说明：RECS 是对 `EntityPool` 的包装，提供实体表与关系扩展的一体化入口。
 
 常用方法
 
@@ -82,7 +82,7 @@ EntityPool
 - capacity, size
 
 - add(n=1, **kwargs) -> np.ndarray[int]
-  - 参见 ECSEngine.add（EntityPool 提供实际实现）。
+  - 参见 RECS.add（EntityPool 提供实际实现）。
 
 - remove(idx) / enable(idx)
 
@@ -94,7 +94,7 @@ EntityPool
 - get_attrs_view(names) -> dict
 
 - index(pred=None, *, return_='indices', include_active_only=False)
-  - 只返回位置（indices/mask），语义与 ECSEngine.index 相同。
+  - 只返回位置（indices/mask），语义与 RECS.index 相同。
 
 - query(pred=None, *, return_='indices', include_active_only=False)
   - 返回 'indices' / 'mask' / 'view' / 'records'。
@@ -192,7 +192,7 @@ DenseRelation
 - 批量创建实体并更新：
 
 ```python
-engine = ECSEngine(128, {'hp': 'float64', 'type': 'int32'})
+engine = RECS(128, {'hp': 'float64', 'type': 'int32'})
 idxs = engine.add(3, hp=[10, 20, 30], type=1)
 engine.set_attr('hp', idxs, np.array([11, 22, 33]))
 ```
@@ -216,7 +216,7 @@ view['w'] = 100.0
 
 版本与兼容性
 
-- 该模块以向后兼容为目标：`ECSEngine` 保持原有 `d` 暴露，便于现有脚本继续工作。
+- 该模块以 `RECS` 作为唯一对外主入口，便于统一维护。
 - 对外暴露的类型与接口旨在尽量贴合 NumPy 的索引/赋值语义，降低学习成本。
 
 

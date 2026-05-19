@@ -163,12 +163,12 @@ class SparseNullable:
 
 
 # =============================
-# 第二类二维数组：Relation（稠密/稀疏后端）
+# 第二类二维数组：Relation（RECS 的关系扩展，稠密/稀疏后端）
 # =============================
 
 
 class DenseRelation:
-    """稠密关系：用二维 ndarray 表示。"""
+    """RECS 稠密关系：用二维 ndarray 表示。"""
 
     def __init__(self, mat: np.ndarray):
         arr = np.asarray(mat)
@@ -223,7 +223,7 @@ class DenseRelation:
 
 
 class SparseRelationEdges:
-    """稀疏关系：边表（src_uid/dst_uid/value）。
+    """RECS 稀疏关系：边表（src_uid/dst_uid/value）。
 
     侧重查询/索引（不提供完整增删 API）。
     """
@@ -288,7 +288,7 @@ class SparseRelationEdges:
 
 class Relation:
     """
-    边表关系（SoA 风格）：以 src_uid / dst_uid 为主键存储，其他属性按列保存。
+    RECS 边表关系（SoA 风格）：以 src_uid / dst_uid 为主键存储，其他属性按列保存。
 
     设计原则：
     - 存储 uid 而非 pool 引用，以便实体可以移动/压缩而关系保持稳定。
@@ -837,7 +837,7 @@ class EntityPoolView:
 
 class EntityPool:
     """
-    SoA 实体池（轻量版），用于在不破坏向后兼容 API 的前提下，提供表格式实体存储与批量操作。
+    RECS 实体池（SoA 版），用于在不破坏向后兼容 API 的前提下，提供表格式实体存储、批量操作与关系扩展支撑。
 
     主要特性：
     - 使用字典 self.d 保存每列 ndarray，长度为 capacity
@@ -1218,9 +1218,9 @@ class EntityPool:
         return idxs
 
 
-class ECSEngine:
+class RECS:
     """
-    向后兼容的 ECSEngine 包装器，内部委托给 EntityPool 来管理存储。
+    RECS 向后兼容的 ECSEngine 包装器，内部委托给 EntityPool 来管理存储。
 
     该类保持原有 API surface（例如访问 d）以便旧的 demo/脚本继续工作。
     """
@@ -1278,13 +1278,14 @@ class ECSEngine:
 
     def dense_matrix_to_relation(self, mat: np.ndarray, dst_pool=None, relation_name: str = 'relation', attr_name: str = 'weight', threshold: float = 0.0) -> Relation:
         """
-        便捷包装：将以本引擎的实体池为行的稠密矩阵转换为 Relation。
+        便捷包装：将以本引擎实体池为行的稠密矩阵转换为 RECS Relation。
+
         如果 dst_pool 为 None，则使用 self 作为目的池。
         """
         if dst_pool is None:
             dst_pool = self
         # if dst_pool is an ECSEngine, pass its internal pool; otherwise assume it's a pool-like object
-        dst_for_rel = dst_pool._pool if isinstance(dst_pool, ECSEngine) else dst_pool
+        dst_for_rel = dst_pool._pool if isinstance(dst_pool, RECS) else dst_pool
         return dense_to_relation(mat, src_pool=self._pool, dst_pool=dst_for_rel, rel_name=relation_name, attr_name=attr_name, threshold=threshold)
 
     def __len__(self):
@@ -1324,5 +1325,5 @@ __all__ = [
     'dense_to_relation',
     'EntityPool',
     'EntityPoolView',
-    'ECSEngine',
+    'RECS',
 ]

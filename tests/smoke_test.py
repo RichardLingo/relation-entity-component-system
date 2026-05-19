@@ -1,10 +1,10 @@
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
-from ecs.ecsengine import ECSEngine
+from recs import RECS
 
 print('SMOKE TEST START')
-engine = ECSEngine(16, {'hp': 'float64', 'type': 'int32'})
+engine = RECS(16, {'hp': 'float64', 'type': 'int32'})
 print('engine.size before', len(engine))
 
 # add entities

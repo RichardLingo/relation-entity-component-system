@@ -1,9 +1,9 @@
-RECS / SoA ECSEngine
+RECS / SoA relation extension
 =================
 
 概览
 ----
-本仓库实现了 relation-entity-component-system，简称 RECS。它提供一个轻量级的 SoA（Structure of Arrays）风格引擎 `ECSEngine`，适合作为表格型实体数据的存储与批量处理基础。
+本仓库实现了 relation-entity-component-system，简称 RECS。它提供一个轻量级的 SoA（Structure of Arrays）风格 RECS 引擎，主入口为 `RECS`。
 
 核心设计要点（目前实现）
 ----------------------
@@ -16,10 +16,10 @@ RECS / SoA ECSEngine
 
 主要 API
 ---------
-类：`ECSEngine`
+类：`RECS`
 
 构造：
-- `ECSEngine(capacity: int, attr_dtypes: dict)`
+- `RECS(capacity: int, attr_dtypes: dict)`
   - `capacity`：初始物理容量（列长度）。
   - `attr_dtypes`：用户自定义字段 -> numpy dtype 映射（例如 `{'position': np.float32}`）。
   - 引擎会自动添加并管理两个必备字段：
@@ -66,32 +66,32 @@ RECS / SoA ECSEngine
 
 ```python
 import numpy as np
-from ecs.engine import ECSEngine
+from recs import RECS
 
-engine = ECSEngine(capacity=4, attr_dtypes={'position': np.float32, 'velocity': np.float32})
+recs_engine = RECS(capacity=4, attr_dtypes={'position': np.float32, 'velocity': np.float32})
 
 # 添加单个实体（n=1，返回 array([idx])）
-idx = engine.add(1, position=1.0, velocity=2.0)
+idx = recs_engine.add(1, position=1.0, velocity=2.0)
 
 # 批量添加 3 个实体（标量和序列混合）
-idxs = engine.add(3, position=[0.1,0.2,0.3], velocity=5.0)
+idxs = recs_engine.add(3, position=[0.1,0.2,0.3], velocity=5.0)
 
 # 添加新字段
-engine.add_attribute('health', dtype=np.int32, default=100)
+recs_engine.add_attribute('health', dtype=np.int32, default=100)
 
 # 禁用 / 启用（支持 int/list/slice/bool-mask）
-engine.remove(idx)          # 单个或数组
-engine.enable(slice(0, 10))
+recs_engine.remove(idx)          # 单个或数组
+recs_engine.enable(slice(0, 10))
 
 # 读取视图
-positions = engine.get_attr('position')
-active = engine.active_mask
-active_indices = engine.get_active_indices()
+positions = recs_engine.get_attr('position')
+active = recs_engine.active_mask
+active_indices = recs_engine.get_active_indices()
 ```
 
 运行 demo 的提示
 ----------------
-- 以包方式运行或确保 Python 能找到 `ecs` 包：将仓库根目录加入 `PYTHONPATH`，例如（Windows PowerShell）：
+- 以包方式运行或确保 Python 能找到 `recs` 包：将仓库根目录加入 `PYTHONPATH`，例如（Windows PowerShell）：
 
 ```powershell
 $env:PYTHONPATH = "C:\Users\Ethan\CoreFiles\ProjectsFile\relation-entity-component-system"
@@ -102,7 +102,7 @@ python .\demos\demo1.py
 --------
 - 目前 `d` 是内部存储细节；推荐外部模块通过 `get_attr()`、`add_attribute()`、`add()`、`remove()`、`enable()` 等 API 操作，而不是直接读取 `d`。
 - 若未来需要 PyTorch/GPU 整合，可考虑把某些字段存成 `torch.Tensor`，或在需要计算时用 `torch.from_numpy()` 批量转换。
-- 如果准备把本引擎打包为 pip 包：添加 `pyproject.toml`/`setup.cfg`，`__init__.py` 导出 `ECSEngine`，并添加测试与 CI。
+- 如果准备把本引擎打包为 pip 包：添加 `pyproject.toml`/`setup.cfg`，`__init__.py` 导出 `RECS`，并添加测试与 CI。
 
 文档 / 文档说明
 ----------------

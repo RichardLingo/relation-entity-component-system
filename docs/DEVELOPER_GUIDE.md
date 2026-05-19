@@ -26,11 +26,11 @@ obj.operation(*args, backend='auto', /, **kwargs)
 ```
 
 - 说明：
-  - `obj`：可为 `EntityPool`、`ECSEngine.d`（实体表视图）、或 `Relation`。
+  - `obj`：可为 `EntityPool`、`RECS.d`（实体表视图）、或 `Relation`。
   - `operation`：例如 `take`, `where`, `apply`, `aggregate`, `join`, `to_dense`, `to_sparse` 等。
   # 开发者指南（Developer Guide）
 
-  本文档以软件工程视角全面描述 ECS 核心库的设计约定、开发流程、编码规范与运行时契约，旨在为新增贡献者与维护者提供一致参考。
+  本文档以软件工程视角全面描述 RECS 核心库的设计约定、开发流程、编码规范与运行时契约，旨在为新增贡献者与维护者提供一致参考。
 
   目录
 
@@ -61,14 +61,14 @@ obj.operation(*args, backend='auto', /, **kwargs)
   架构概览
 
   - 存储策略：SoA（Structure of Arrays），每个属性为独立的 ndarray/列，方便列向量化操作。
-  - 主要模块：`ecs` 包含 `ecsengine.py`、`EntityPool`、`Relation`；`demos/` 提供使用示例。
+  - 主要模块：`recs` 包含 `RECS`、`EntityPool`、`Relation`；`demos/` 提供使用示例。
   - 扩展点：后端实现（dense/sparse）、查询/索引语义、序列化接口。
 
   数据模型与主要类型
 
   - `EntityPool`：实体集合管理器，关键字段 `d`（列字典）、`i`（uid 列）、`o`（启用标记）、`capacity`、`size` 等。
   - `Relation`：边/关系表，列式存储 `src_uid`,`dst_uid` 与其它边属性。
-  - `ECSEngine`：兼容包装器，暴露常用代理方法并管理多个实体池/关系。
+  - `RECS`：统一入口，暴露常用代理方法并管理多个实体池/关系。
 
   公共 API 与约定
 
@@ -125,7 +125,7 @@ obj.operation(*args, backend='auto', /, **kwargs)
 
   向后兼容与迁移策略
 
-  - 兼容层：`ECSEngine` 提供代理方法，将老接口映射到新约定；任何移除的老接口必须在文档中标注弃用周期。
+  - 入口层：`RECS` 提供代理方法与关系扩展能力，所有文档与示例统一以该入口为准。
   - 迁移文档：为重大接口变更提供迁移示例代码段（old → new）。
 
   贡献者指南（PR、分支、代码审查）
@@ -147,7 +147,7 @@ obj.operation(*args, backend='auto', /, **kwargs)
   示例与参考
 
   - 使用示例：参见 `demos/`。
-  - 主要实现：参见 `ecs/ecsengine.py`、`ecs/__init__.py`。
+  - 主要实现：参见 `recs` 包入口。
 
   附录：下一步建议
 

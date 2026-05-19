@@ -81,7 +81,7 @@ python .\demos\demo2.py
 
 ## 5. 后续增强建议（可选）
 
-1. **更贴近真实 ECS Query 的形态**：
+1. **更贴近真实 RECS Query 的形态**：
    - 增加按类别字段（int codes）的谓词
    - 增加更多列组合（3~8 列）
 

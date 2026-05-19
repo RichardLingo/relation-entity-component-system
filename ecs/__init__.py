@@ -1,15 +1,15 @@
-"""ECS 子模块（单文件实现）。
+"""RECS 核心实现包。
 
 说明
 ----
-本包的核心实现已收敛到 `ecsengine.py`。
+核心实现收敛到 `ecsengine.py`。
 推荐用法：
 
-- `from ecs import ECSEngine, Relation`
+- `from recs import RECS, Relation`
 """
 
 from .ecsengine import (
-    ECSEngine,
+    RECS,
     EntityPool,
     EntityPoolView,
     Relation,
@@ -24,7 +24,7 @@ from .ecsengine import (
 )
 
 __all__ = [
-    'ECSEngine',
+    'RECS',
     'EntityPool',
     'EntityPoolView',
     'Relation',

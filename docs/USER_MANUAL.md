@@ -8,7 +8,7 @@
 - 概览（概念）
 - 面向用户的优势（高阶视角）
 - 公共 API 快速参考（简明）
-  - ECSEngine（高层，兼容层）
+  - RECS（高层）
   - EntityPool / EntityPoolView
   - Relation / RelationView / SparseRelationEdges / DenseRelation
   - 主要工具函数（to_indices / to_mask / dense_to_relation）
@@ -65,9 +65,9 @@ python demos\demo2.py
 
 本节只列出用户常用的函数/方法和它们的快速语义说明。更细的参数、返回值、例子见 `docs/API_REFERENCE.md`。
 
-ECSEngine（高层，兼容层）
+RECS（高层）
 
-- 构造：`ECSEngine(capacity, attr_dtypes)` — 创建引擎并预分配字段（attr_dtypes 为字典）。
+- 构造：`RECS(capacity, attr_dtypes)` — 创建引擎并预分配字段（attr_dtypes 为字典）。
 - 常用方法：
   - `add(n=1, **kwargs)` — 批量添加实体；可通过 kwargs 设置各属性（支持广播）。
   - `remove(idx)` / `enable(idx)` — 逻辑禁用/启用行（修改 `o` 字段）。
@@ -94,8 +94,8 @@ Relation / RelationView / SparseRelationEdges / DenseRelation
 创建引擎并添加实体：
 
 ```python
-from ecs.ecsengine import ECSEngine
-engine = ECSEngine(64, {'hp': 'float64', 'type': 'int32'})
+from recs import RECS
+engine = RECS(64, {'hp': 'float64', 'type': 'int32'})
 # 添加实体：返回新实体在 pool 中的下标范围
 idxs = engine.add(2, hp=[50.0, 80.0], type=[1, 2])
 # 禁用第 0 个实体（逻辑删除）
@@ -153,7 +153,7 @@ print(rel.d['dst_uid'][:rel.size])
 - 索引（index）：只返回位置（indices/mask），便于组合多个条件，代价低。
 - 查询（query）：在索引基础上返回想要的数据形态（view/copy/relation），根据需要选择是否材料化。
 
-示例（EntityPool / ECSEngine）：
+示例（EntityPool / RECS）：
 
 ```python
 # 只获取下标（轻量）

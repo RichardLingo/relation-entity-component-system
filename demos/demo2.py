@@ -1,6 +1,6 @@
 """
 @File   ?demo2.py
-@Desc   : RECS demo: entity table and relation examples.
+@Desc   : RECS demo: RECS + relation extension examples.
 
 This example has migrated to the recommended unified index/query style:
 - entity table: engine.index / engine.query
@@ -13,20 +13,19 @@ from pathlib import Path
 import numpy as np
 
 try:
-    from ecs.ecsengine import ECSEngine  # #NOTE 导入引擎模块。不能改动该行!
+    from recs import RECS  # #NOTE 导入 RECS 主入口。不能改动该行!
 except ModuleNotFoundError:
     # 允许直接运行本 demo：把仓库根目录加入 sys.path
     # 这样在未设置 PYTHONPATH 的情况下也能运行。
     this_file = Path(__file__).resolve()
     # 结构：.../relation-entity-component-system/demos/demo2.py
-    # 要能 import ecs.*，需要把“仓库根目录”加入 sys.path
+    # 要能 import recs.*，需要把“仓库根目录”加入 sys.path
     repo_root = this_file.parents[1]  # .../relation-entity-component-system
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from ecs.ecsengine import ECSEngine  # noqa: E402
+    from recs import RECS  # noqa: E402
 
-# from ecs.ecsengine import dense_to_relation
-# from ecs.ecsengine import EntityPool
+# 可在这里直接接入矩阵转关系与实体池的辅助函数
 
 # 1. 初始化银行个体众，初始容量为5
 attr_types_banks = {
@@ -35,15 +34,15 @@ attr_types_banks = {
     'A_IB_all': np.float32,  # 银间的资产
     'Z_IB_all': np.float32  # 银间的负债
 }
-et_banks = ECSEngine(capacity=5, attr_dtypes=attr_types_banks)
-et_banks.d['o'][:] = True  # 启用所有银行实体
-et_banks.d['name'][:] = ['Bank 1', 'Bank 2', 'Bank 3', 'Bank 4', 'Bank 5']  # 初始化银行名称
-et_banks.d['A_exb'][:] = [1631.73, 4303.24, 3379.72, 4351.47, 620.69]  # 初始化对厂商的资产
-et_banks.d['A_IB_all'][:] = [2185.24, 398.37, 730.99, 1357.75, 2717.39]  # 初始化银行间的资产
-et_banks.d['Z_IB_all'][:] = [959.6, 1844.24, 1253.34, 2851.85, 480.71]  # 初始化银行间的负债
+bank_pool = RECS(capacity=5, attr_dtypes=attr_types_banks)
+bank_pool.d['o'][:] = True  # 启用所有银行实体
+bank_pool.d['name'][:] = ['Bank 1', 'Bank 2', 'Bank 3', 'Bank 4', 'Bank 5']  # 初始化银行名称
+bank_pool.d['A_exb'][:] = [1631.73, 4303.24, 3379.72, 4351.47, 620.69]  # 初始化对厂商的资产
+bank_pool.d['A_IB_all'][:] = [2185.24, 398.37, 730.99, 1357.75, 2717.39]  # 初始化银行间的资产
+bank_pool.d['Z_IB_all'][:] = [959.6, 1844.24, 1253.34, 2851.85, 480.71]  # 初始化银行间的负债
 # 设置逻辑 size，使 pool 知道已有实体数量
-et_banks._pool.size = 5
-et_banks._pool.d['o'][:et_banks._pool.size] = True
+bank_pool._pool.size = 5
+bank_pool._pool.d['o'][:bank_pool._pool.size] = True
 
 # 1. 初始化厂商个体众，初始容量为4
 attr_types_firms = {
@@ -51,14 +50,14 @@ attr_types_firms = {
     'production_rate': np.float32,  # 生产率
     'DA': np.float32  # 贷款金额
 }
-et_firms = ECSEngine(capacity=4, attr_dtypes=attr_types_firms)
-et_firms.d['o'][:] = True  # 启用所有厂商实体
-et_firms.d['name'][:] = ['Firm 1', 'Firm 2', 'Firm 3', 'Firm 4']  # 初始化厂商名称
-et_firms.d['production_rate'][:] = [1.2, 0.9, 1.1, 1.3]  # 初始化生产率
-et_firms.d['DA'][:] = [4361.83, 2575.97, 4259.21, 3089.84]  # 初始化贷款金额
+firm_pool = RECS(capacity=4, attr_dtypes=attr_types_firms)
+firm_pool.d['o'][:] = True  # 启用所有厂商实体
+firm_pool.d['name'][:] = ['Firm 1', 'Firm 2', 'Firm 3', 'Firm 4']  # 初始化厂商名称
+firm_pool.d['production_rate'][:] = [1.2, 0.9, 1.1, 1.3]  # 初始化生产率
+firm_pool.d['DA'][:] = [4361.83, 2575.97, 4259.21, 3089.84]  # 初始化贷款金额
 # 设置逻辑 size
-et_firms._pool.size = 4
-et_firms._pool.d['o'][:et_firms._pool.size] = True
+firm_pool._pool.size = 4
+firm_pool._pool.d['o'][:firm_pool._pool.size] = True
 
 pass  #DEBUG
 
@@ -71,7 +70,7 @@ A_IB = np.array([
 ], dtype=np.float32)  # 银行间拆借矩阵
 
 # 将稠密的银行-银行矩阵转换为 Relation（基于 uid 的边表）
-A_IB_rel = et_banks.dense_matrix_to_relation(A_IB, dst_pool=et_banks, relation_name='A_IB', attr_name='amount', threshold=0.0)
+bank_bank_rel = bank_pool.dense_matrix_to_relation(A_IB, dst_pool=bank_pool, relation_name='A_IB', attr_name='amount', threshold=0.0)
 
 IBA = np.array([
     [685.08, 115.72, 229.3, 601.64],
@@ -82,20 +81,20 @@ IBA = np.array([
 ], dtype=np.float32)  # 银行持有贷款类资产邻接矩阵 IBA (NxM)
 
 # 将银行-厂商矩阵转换为 Relation
-IBA_rel = et_banks.dense_matrix_to_relation(IBA, dst_pool=et_firms, relation_name='IBA', attr_name='amount', threshold=0.0)
+bank_firm_rel = bank_pool.dense_matrix_to_relation(IBA, dst_pool=firm_pool, relation_name='IBA', attr_name='amount', threshold=0.0)
 
 
 
 # ----------------- 第一类二维数组（实体表）索引/查询示例（统一 index/query） -----------------
 # 索引层：返回 idx（轻量，不拷贝列数据）
-idxs_combo = et_banks.index(
+idxs_combo = bank_pool.index(
     lambda p: (p.get_attr('A_exb') > 3000) & (p.get_attr('A_IB_all') > 1000),
     return_='indices',
     include_active_only=True
 )
 
 # 查询层：返回 view（只保存 idx + 引用；需要哪列再取哪列）
-banks_view = et_banks.query(
+banks_view = bank_pool.query(
     lambda p: (p.get_attr('A_exb') > 3000) & (p.get_attr('A_IB_all') > 1000),
     return_='view',
     include_active_only=True
@@ -103,7 +102,7 @@ banks_view = et_banks.query(
 banks_view_names = banks_view['name']
 
 # 查询层：返回 records（材料化拷贝）
-records_combo = et_banks.query(
+records_combo = bank_pool.query(
     lambda p: (p.get_attr('A_exb') > 3000) & (p.get_attr('A_IB_all') > 1000),
     return_='records',
     include_active_only=True
@@ -111,47 +110,47 @@ records_combo = et_banks.query(
 
 # ----------------- 第二类二维数组（Relation）索引/查询示例（统一 index/query） -----------------
 # 索引层：支持 src_uid/dst_uid 单 uid 或多 uid（OR），edge_pred 支持 mask/callable
-bank_uids = et_banks.uid_array()
+bank_uids = bank_pool.uid_array()
 src_uids_or = [int(bank_uids[0]), int(bank_uids[1])]
-edge_idxs_or = IBA_rel.index(src_uid=src_uids_or, edge_pred=(IBA_rel.get_attr('amount') > 1000), return_='indices')
+edge_idxs_or = bank_firm_rel.index(src_uid=src_uids_or, edge_pred=(bank_firm_rel.get_attr('amount') > 1000), return_='indices')
 
 # 查询层：返回 view（轻量，像表一样访问列）
-edge_view = IBA_rel.query(src_uid=int(bank_uids[0]), edge_pred=(IBA_rel.get_attr('amount') > 1000), return_='view')
+edge_view = bank_firm_rel.query(src_uid=int(bank_uids[0]), edge_pred=(bank_firm_rel.get_attr('amount') > 1000), return_='view')
 edge_dst_uids = edge_view['dst_uid']
 
 # 查询层：返回子 Relation（拷贝）
-sub_rel = IBA_rel.query(src_uid=int(bank_uids[0]), edge_pred=(IBA_rel.get_attr('amount') > 1000), return_='relation')
+sub_rel = bank_firm_rel.query(src_uid=int(bank_uids[0]), edge_pred=(bank_firm_rel.get_attr('amount') > 1000), return_='relation')
 
 # ----------------- 高性能 Relation 操作示例 -----------------
 # 构建 uid -> 位置 映射（用于高效行/列聚合）
-bank_uid_to_pos = IBA_rel.build_uid_to_pos(et_banks.uid_array())
-firm_uid_to_pos = IBA_rel.build_uid_to_pos(et_firms.uid_array())
+bank_uid_to_pos = bank_firm_rel.build_uid_to_pos(bank_pool.uid_array())
+firm_uid_to_pos = bank_firm_rel.build_uid_to_pos(firm_pool.uid_array())
 
 # 行和 / 列和（等价于稠密矩阵的按行/按列求和）
-iba_row_sum = IBA_rel.row_sum('amount', bank_uid_to_pos, n_rows=et_banks.size)
-iba_col_sum = IBA_rel.col_sum('amount', firm_uid_to_pos, n_cols=et_firms.size)
+iba_row_sum = bank_firm_rel.row_sum('amount', bank_uid_to_pos, n_rows=bank_pool.size)
+iba_col_sum = bank_firm_rel.col_sum('amount', firm_uid_to_pos, n_cols=firm_pool.size)
 
 # 行/列计数（度）
-iba_row_degree = IBA_rel.row_count(bank_uid_to_pos, n_rows=et_banks.size)
-iba_col_degree = IBA_rel.col_count(firm_uid_to_pos, n_cols=et_firms.size)
+iba_row_degree = bank_firm_rel.row_count(bank_uid_to_pos, n_rows=bank_pool.size)
+iba_col_degree = bank_firm_rel.col_count(firm_uid_to_pos, n_cols=firm_pool.size)
 
 # 排序与 Top-K（性能示例）
-order_desc = IBA_rel.argsort_by('amount', ascending=False)
-iba_top3 = IBA_rel.take(order_desc[:3])
+order_desc = bank_firm_rel.argsort_by('amount', ascending=False)
+iba_top3 = bank_firm_rel.take(order_desc[:3])
 
 # 更新与删除（示例：将最大边权置零，并删除最后一条边）
 if order_desc.size > 0:
-    IBA_rel.set_attr('amount', order_desc[:1], 0.0)
-if IBA_rel.size > 0:
-    IBA_rel.remove_by_indices([IBA_rel.size - 1])
+    bank_firm_rel.set_attr('amount', order_desc[:1], 0.0)
+if bank_firm_rel.size > 0:
+    bank_firm_rel.remove_by_indices([bank_firm_rel.size - 1])
 
 
 # ----------------- 赋值操作示例（索引后写入 / 查询后写入 / view 回写） -----------------
 # 1) 实体表：按索引对单列赋值（标量广播）
-et_banks.set_attr('A_exb', [0, 1], 9999.0, backend='auto')
+bank_pool.set_attr('A_exb', [0, 1], 9999.0, backend='auto')
 
 # 2) 实体表：按同一索引批量赋值（多列）
-et_banks.assign(
+bank_pool.assign(
     [2, 3],
     {
         'A_exb': np.array([7000.0, 7100.0], dtype=np.float32),
@@ -161,7 +160,7 @@ et_banks.assign(
 )
 
 # 3) 实体表：按查询条件直接赋值（where_set）
-hit_bank_idxs = et_banks.where_set(
+hit_bank_idxs = bank_pool.where_set(
     lambda p: p.get_attr('A_IB_all') > 2000,
     {'Z_IB_all': 0.0},
     backend='auto',
@@ -169,22 +168,22 @@ hit_bank_idxs = et_banks.where_set(
 )
 
 # 4) 实体表：view 可写语义（直接回写到底层）
-bank_view_write = et_banks.query(lambda p: p.get_attr('A_exb') > 6000, return_='view', include_active_only=True)
+bank_view_write = bank_pool.query(lambda p: p.get_attr('A_exb') > 6000, return_='view', include_active_only=True)
 if bank_view_write.size > 0:
     bank_view_write['Z_IB_all'] = np.full(bank_view_write.size, 123.0, dtype=np.float32)
     bank_view_write.assign({'A_IB_all': 321.0}, backend='sparse')
 
 
 # 5) 关系表：按索引对单列赋值
-if IBA_rel.size > 0:
-    IBA_rel.set_attr('amount', slice(0, min(2, IBA_rel.size)), 888.0, backend='auto')
+if bank_firm_rel.size > 0:
+    bank_firm_rel.set_attr('amount', slice(0, min(2, bank_firm_rel.size)), 888.0, backend='auto')
 
 # 6) 关系表：按查询条件直接赋值（where_set）
-bank_uids2 = et_banks.uid_array()
+bank_uids2 = bank_pool.uid_array()
 if bank_uids2.size > 0:
-    hit_edge_idxs = IBA_rel.where_set(
+    hit_edge_idxs = bank_firm_rel.where_set(
         src_uid=int(bank_uids2[0]),
-        edge_pred=(IBA_rel.get_attr('amount') > 500),
+        edge_pred=(bank_firm_rel.get_attr('amount') > 500),
         values_by_attr={'amount': 555.0},
         backend='dense',
     )
@@ -192,7 +191,7 @@ else:
     hit_edge_idxs = np.empty(0, dtype=int)
 
 # 7) 关系表：view 可写语义（直接回写到底层）
-edge_view_write = IBA_rel.query(edge_pred=(IBA_rel.get_attr('amount') > 200), return_='view')
+edge_view_write = bank_firm_rel.query(edge_pred=(bank_firm_rel.get_attr('amount') > 200), return_='view')
 if edge_view_write.size > 0:
     edge_view_write['amount'] = np.full(edge_view_write.size, 222.0, dtype=np.float32)
     edge_view_write.assign({'amount': 333.0}, backend='sparse')
@@ -201,5 +200,5 @@ if edge_view_write.size > 0:
 # 轻量输出：确认命中数量与部分结果
 print("[赋值示例] 实体 where_set 命中数:", int(hit_bank_idxs.size))
 print("[赋值示例] 关系 where_set 命中数:", int(hit_edge_idxs.size))
-print("[赋值示例] 银行 A_exb 前3项:", et_banks.get_attr('A_exb')[:3])
-print("[赋值示例] IBA amount 前5项:", IBA_rel.get_attr('amount')[:5])
+print("[赋值示例] 银行 A_exb 前3项:", bank_pool.get_attr('A_exb')[:3])
+print("[赋值示例] IBA amount 前5项:", bank_firm_rel.get_attr('amount')[:5])
