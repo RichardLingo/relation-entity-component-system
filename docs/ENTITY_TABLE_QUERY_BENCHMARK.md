@@ -1,6 +1,6 @@
 # 第一类二维数组（实体表）Query 性能评估（基准报告）
 
-本文档评估：在类 ECS（SoA）实体表中，“**由属性反查得到索引**”（也就是 ECS Query 的核心路径）这件事的性能。
+本文档评估：在类 RECS（SoA）实体表中，“**由属性反查得到索引**”（也就是 RECS Query 的核心路径）这件事的性能。
 
 > 说明
 > - 本项目的“第一类二维数组”是实体属性表：属性名 -> 1D NumPy 数组（SoA）。
@@ -12,7 +12,7 @@
 ## 1. 测试代码位置
 
 基准测试已写入：
-- `Projects/ECS/demos/demo2.py`
+- `demos/demo2.py`
 
 核心函数：
 - `bench_entity_query(n_entities, rounds)`
@@ -67,8 +67,8 @@ idxs = np.nonzero(mask)[0]
 在 Windows PowerShell：
 
 ```powershell
-$env:PYTHONPATH = "C:\Users\Ethan\CoreFiles\ProjectsFile\ComplexSystemLab\ComplexSystemLab"
-python .\Projects\ECS\demos\demo2.py
+$env:PYTHONPATH = "C:\Users\Ethan\CoreFiles\ProjectsFile\relation-entity-component-system"
+python .\demos\demo2.py
 ```
 
 运行后会看到类似：

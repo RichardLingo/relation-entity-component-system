@@ -1,6 +1,6 @@
 """
-@File   ：demo1.py
-@Desc   : 示例：演示如何使用 ECSEngine 创建实体池、初始化属性并把稠密邻接矩阵转换为 Relation。
+@File   ?demo3.py
+@Desc   : RECS demo: entity table and relation examples.
 """
 
 import sys
@@ -9,20 +9,20 @@ from pathlib import Path
 import numpy as np
 
 try:
-    from ComplexSystemLab.Projects.ECS.ecs.ecsengine import ECSEngine  # #NOTE 导入引擎模块。不能改动该行!
+    from ecs.ecsengine import ECSEngine  # #NOTE 导入引擎模块。不能改动该行!
 except ModuleNotFoundError:
-    # 允许直接运行本 demo：把仓库根（ComplexSystemLab 的父目录）加入 sys.path
+    # 允许直接运行本 demo：把仓库根目录加入 sys.path
     # 这样在未设置 PYTHONPATH 的情况下也能运行。
     this_file = Path(__file__).resolve()
-    # 结构：.../ComplexSystemLab/ComplexSystemLab/Projects/ECS/demos/demo2.py
-    # 要能 import ComplexSystemLab.*，需要把“外层 ComplexSystemLab 目录”加入 sys.path
-    repo_root = this_file.parents[4]  # .../ComplexSystemLab
+    # 结构：.../relation-entity-component-system/demos/demo3.py
+    # 要能 import ecs.*，需要把“仓库根目录”加入 sys.path
+    repo_root = this_file.parents[1]  # .../relation-entity-component-system
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from ComplexSystemLab.Projects.ECS.ecs.ecsengine import ECSEngine  # noqa: E402
+    from ecs.ecsengine import ECSEngine  # noqa: E402
 
-# from ComplexSystemLab.Projects.ECS.ecs.ecsengine import dense_to_relation
-# from ComplexSystemLab.Projects.ECS.ecs.ecsengine import EntityPool
+# from ecs.ecsengine import dense_to_relation
+# from ecs.ecsengine import EntityPool
 
 # 1. 初始化银行个体众，初始容量为5
 attr_types_banks = {

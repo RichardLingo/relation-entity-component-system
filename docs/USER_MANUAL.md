@@ -28,7 +28,7 @@
 - Python 3.8+
 - NumPy 1.20+
 
-在 `ComplexSystemLab/Projects/ECS` 中，项目已经包含纯 Python 代码和示例。若你把本目录作为包使用，请确保你的环境已安装 NumPy：
+在 `relation-entity-component-system` 中，项目已经包含纯 Python 代码和示例。若你把本目录作为包使用，请确保你的环境已安装 NumPy：
 
 ```powershell
 python -m pip install numpy

@@ -5,7 +5,7 @@
 本包的核心实现已收敛到 `ecsengine.py`。
 推荐用法：
 
-- `from ComplexSystemLab.Projects.ECS.ecs import ECSEngine, Relation`
+- `from ecs import ECSEngine, Relation`
 """
 
 from .ecsengine import (

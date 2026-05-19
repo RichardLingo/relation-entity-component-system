@@ -1,9 +1,9 @@
-ECS / SoA ECSEngine
+RECS / SoA ECSEngine
 =================
 
 概览
 ----
-本仓库实现了一个轻量级的 SoA（Structure of Arrays）风格的引擎 `ECSEngine`，适合作为表格型实体数据的存储与批量处理基础。
+本仓库实现了 relation-entity-component-system，简称 RECS。它提供一个轻量级的 SoA（Structure of Arrays）风格引擎 `ECSEngine`，适合作为表格型实体数据的存储与批量处理基础。
 
 核心设计要点（目前实现）
 ----------------------
@@ -62,7 +62,7 @@ ECS / SoA ECSEngine
 
 使用示例（demo1）
 -----------------
-下面示例在 `Projects/ECS/demos/demo1.py` 中已有实现：
+下面示例在 `demos/demo1.py` 中已有实现：
 
 ```python
 import numpy as np
@@ -91,11 +91,11 @@ active_indices = engine.get_active_indices()
 
 运行 demo 的提示
 ----------------
-- 以包方式运行或确保 Python 能找到 `ecs` 包：将包含 `Projects/ECS` 的上级目录加入 `PYTHONPATH`，例如（Windows PowerShell）：
+- 以包方式运行或确保 Python 能找到 `ecs` 包：将仓库根目录加入 `PYTHONPATH`，例如（Windows PowerShell）：
 
 ```powershell
-$env:PYTHONPATH = "C:\Users\Ethan\CoreFiles\ProjectsFile\ComplexSystemLab\ComplexSystemLab"
-python .\Projects\ECS\demos\demo1.py
+$env:PYTHONPATH = "C:\Users\Ethan\CoreFiles\ProjectsFile\relation-entity-component-system"
+python .\demos\demo1.py
 ```
 
 集成建议
@@ -106,7 +106,7 @@ python .\Projects\ECS\demos\demo1.py
 
 文档 / 文档说明
 ----------------
-本项目的用户与开发文档存放在 `docs/` 目录中，已包含下列文件（相对于 `Projects/ECS` 目录）：
+本项目的用户与开发文档存放在 `docs/` 目录中，已包含下列文件（相对于仓库根目录）：
 
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — 开发者指南：架构说明、主要数据结构、扩容策略、示例代码与故障排查。
 - [USER_MANUAL.md](docs/USER_MANUAL.md) — 用户手册：快速上手、依赖说明、API 参考与常见示例。
@@ -116,15 +116,15 @@ python .\Projects\ECS\demos\demo1.py
 
 ```powershell
 # 从仓库根运行（示例）
-code .\Projects\ECS\docs\DEVELOPER_GUIDE.md   # 或使用你喜欢的编辑器
-notepad .\Projects\ECS\docs\USER_MANUAL.md
+code .\docs\DEVELOPER_GUIDE.md   # 或使用你喜欢的编辑器
+notepad .\docs\USER_MANUAL.md
 ```
 
 请参阅 docs 中的文件以获取更详细的使用和开发说明。
 
 更多相关资料
 ------------
-- [图数据结构与算法综述（notes/graph_structures_and_algorithms.md）](../../../../../../CS_notebook/Projects/ECS/notes/graph_structures_and_algorithms.md)
+- [图数据结构与算法综述（notes/graph_structures_and_algorithms.md）](../../../../../../ES_notebook/Projects/RECS/notes/graph_structures_and_algorithms.md)
 
 注意事项
 --------
