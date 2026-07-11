@@ -1,6 +1,15 @@
 [project]
-name = "entity-relation-system-kit"
-version = "0.1.0"
-description = "Add your description here"
+name = "relation-entity-component-system-kit"
+version = "0.2.0"
+description = "RECS — 关系-实体-组件系统：支持多后端（NumPy/PyTorch/MLX/JAX/TensorFlow）的高性能 ECS 引擎"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+torch = ["torch>=2.0"]
+mlx = ["mlx>=0.10"]
+jax = ["jax>=0.4", "jaxlib>=0.4"]
+tf = ["tensorflow>=2.12"]
+all = ["recs[torch,mlx,jax,tf]"]
