@@ -1,5 +1,5 @@
 """
-@File   ?demo3.py
+@File   : demo3.py
 @Desc   : RECS demo: RECS + relation extension examples.
 """
 

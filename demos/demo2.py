@@ -1,5 +1,5 @@
 """
-@File   ?demo2.py
+@File   : demo2.py
 @Desc   : RECS demo: RECS + relation extension examples.
 
 This example has migrated to the recommended unified index/query style:

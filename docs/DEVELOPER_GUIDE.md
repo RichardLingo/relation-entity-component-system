@@ -2,6 +2,90 @@
 
 目录
 
+## 多后端计算架构（Multi-Backend Architecture）
+
+### 设计目标
+
+在保持默认 NumPy 后端零退化兼容的前提下，支持 PyTorch、MLX、JAX 等可选后端，使 EntityPool/Relation 能在不同计算框架上透明运行。
+
+### 架构概览
+
+```
+recs/backends/
+├── __init__.py      # 后端注册表 + get_backend / list_backends
+├── base.py          # BackendBase 抽象基类（ABC，~28 个抽象方法）
+├── numpy_backend.py # NumpyBackend（默认，零额外依赖）
+├── torch_backend.py # TorchBackend（可选，pip install torch）
+├── mlx_backend.py   # MLXBackend（可选，pip install mlx）
+├── jax_backend.py   # JAXBackend（可选，pip install jax）
+└── tf_backend.py    # TFBackend（可选，pip install tensorflow）
+```
+
+### 后端接口定义
+
+`BackendBase` 定义了约 28 个抽象方法：
+
+| 类别 | 方法 | 说明 |
+|------|------|------|
+| 元信息 | `name`, `device` | 后端名称与当前设备 |
+| 数组创建 | `empty`, `zeros`, `ones`, `full`, `arange`, `array` | |
+| 常用 dtype | `int64`, `float32`, `float64`, `bool` | 属性方式访问 |
+| 数组操作 | `where`, `concatenate`, `copy`, `asarray`, `ascontiguousarray`, `astype` | |
+| 索引与查询 | `nonzero`, `boolean_mask`, `isin` | |
+| 聚合 | `bincount`, `add_at`, `sum`, `all` | |
+| 排序与唯一 | `argsort`, `unique` | |
+| 位操作 | `packbits`, `unpackbits` | SparseBoolBitset 专用 |
+| 类型转换 | `to_numpy`, `from_numpy` | 跨后端数据导出 |
+| 设备管理 | `to_device`, `cpu`, `gpu` | |
+| dtype 工具 | `is_floating`, `is_integer`, `is_bool`, `is_string`, `dtype_of` | |
+
+### 注册表与惰性加载
+
+```python
+from recs.backends import get_backend, list_backends
+
+list_backends()  # → ['numpy', 'torch', 'mlx', 'jax']
+b = get_backend('torch')       # 若未安装则抛出 ValueError
+b = get_backend('auto')        # 优先级: mlx > torch > jax > numpy
+```
+
+后端注册表采用惰性注册策略：`_try_register()` 在 import 失败时静默跳过。
+
+### EntityPool/Relation 后端集成
+
+```python
+# RECS 级别（推荐）
+r = RECS(64, {'x': float, 'y': float}, backend='torch')
+
+# EntityPool 级别
+pool = EntityPool(64, {'x': float}, backend='torch')
+
+# Relation 级别
+rel = Relation('edges', capacity=64, attr_dtypes={'w': float}, backend='mlx')
+```
+
+**关键设计决策：**
+1. 默认 `backend='numpy'`（非 `'auto'`）——确保现有代码零改动
+2. 字符串列强制 NumPy——`_string_columns` 集合 + `_is_string_value()` 前置检测
+3. `to_numpy()` 统一出口——所有后端均可导出为 NumPy 数组
+
+### 已知后端局限与适配策略
+
+| 后端 | 局限 | 适配策略 |
+|------|------|----------|
+| PyTorch MPS | 不支持 float64 | `_map_dtype` 降级 float64 → float32 |
+| PyTorch MPS | `size` 是方法 | 使用 `shape[0]` 替代 `.size` |
+| PyTorch | 无 `astype(int)` | 统一使用 `BackendBase.astype()` |
+| MLX | 不支持 float64 | 降级 float64 → float32 |
+| MLX GPU scatter | 不支持 int64 | 降级 int64 → int32 |
+| MLX | 不支持布尔索引 | `boolean_mask` 回退整数索引 |
+| MLX | 无 `nonzero` | 回退 `np.asarray` + `np.nonzero` |
+| MLX | `add_at` 不可原地 | 抛出 NotImplementedError |
+| JAX | 数组不可变 | 仅支持只读查询 |
+| TensorFlow | Python 3.14 不兼容 | 静默跳过注册 |
+
+---
+
 ## 二维数组操作规范（实体表 / 关系表，稠密 / 稀疏）
 
 目标：为 RECS 中两类二维数组（实体表、关系数组）在两种数据结构形式（稠密形式、稀疏形式）上的各种操作建立统一约定，提供类似 NumPy 的语法糖，并在默认缺省参数下由后台自动判断并路由到合适的实现；当用户显式传入参数时按参数指定的数据结构类型调用对应算法。

@@ -17,11 +17,12 @@ RECS（高层）
 构造
 
 ```
-RECS(capacity, attr_dtypes)
+RECS(capacity, attr_dtypes, backend='numpy')
 ```
 
 - capacity: 初始容量（整数）。
 - attr_dtypes: 字典，键为属性名，值为 numpy dtype（字符串或 dtype 对象）。
+- backend: 计算后端，支持 'numpy'（默认）/ 'torch' / 'mlx' / 'jax' / 'auto'。
 
 说明：RECS 是对 `EntityPool` 的包装，提供实体表与关系扩展的一体化入口。
 
@@ -37,11 +38,17 @@ RECS(capacity, attr_dtypes)
 - enable(idx)
   - 将指定下标标记为启用（`o` = True）。
 
+- disable(idx)
+  - 将指定下标标记为禁用（`o` = False）。
+
+- is_active(idx) -> bool
+  - 检查指定索引的实体是否为激活状态。
+
 - add_attribute(name, dtype, default=0)
   - 动态添加列并用 default 初始化。
 
-- get_attr(name) -> np.ndarray
-  - 返回属性 name 的视图（长度为当前 size）。
+- get_attr(name) -> np.ndarray | backend array
+  - 返回属性 name 的视图（长度为当前 size），数据类型取决于后端。
 
 - get_attrs_view(names) -> dict
   - 返回多个属性的视图。
@@ -63,6 +70,9 @@ RECS(capacity, attr_dtypes)
 - where_set(pred, values_by_attr: dict, *, backend='auto', include_active_only=False)
   - 按谓词直接对命中实体批量赋值（等价于先 query(..., 'indices') 再 assign）。
 
+- to_numpy() -> dict[str, np.ndarray]
+  - 将所有列导出为 NumPy 数组并返回字典。无论使用哪个后端，均可通过此方法统一导出。
+
 - uid_array() -> np.ndarray
   - 返回当前已分配实体（前 size 项）的 uid 数组视图。
 
@@ -74,10 +84,20 @@ EntityPool / EntityPoolView
 
 EntityPool
 
+构造
+
+```
+EntityPool(capacity, attr_dtypes, backend='numpy')
+```
+
+- capacity: 初始容量（整数）。
+- attr_dtypes: 字典，键为属性名，值为 dtype（支持 numpy dtype 或 'U10' 等字符串类型）。
+- backend: 计算后端，支持 'numpy'（默认）/ 'torch' / 'mlx' / 'jax' / 'auto'。
+
 常用属性/方法（用户层）
 
-- d: dict[str, np.ndarray]
-  - 底层列存储；`d['i']` 是 uid 列，`d['o']` 是激活位（bool）。
+- d: dict[str, np.ndarray | backend array]
+  - 底层列存储；`d['i']` 是 uid 列，`d['o']` 是激活位（bool）。数据类型取决于后端。
 
 - capacity, size
 
@@ -86,9 +106,12 @@ EntityPool
 
 - remove(idx) / enable(idx)
 
+- is_active(idx) -> bool
+  - 检查指定索引的实体是否为激活状态。
+
 - add_attribute(name, dtype, default=0)
 
-- get_attr(name) -> np.ndarray
+- get_attr(name) -> np.ndarray | backend array
   - 返回长度为 size 的列视图。
 
 - get_attrs_view(names) -> dict
@@ -105,6 +128,9 @@ EntityPool
 - assign(idx, values_by_attr: dict, *, backend='auto')
 
 - where_set(pred, values_by_attr: dict, *, backend='auto', include_active_only=False)
+
+- to_numpy() -> dict[str, np.ndarray]
+  - 将所有列导出为 NumPy 数组。字符串列直接返回切片，数值列经过 `backend.to_numpy()` 转换。
 
 EntityPoolView
 
@@ -131,8 +157,13 @@ Relation（稀疏边表）
 构造：
 
 ```
-Relation(name: str, capacity: int = 1024, attr_dtypes: Optional[dict] = None)
+Relation(name: str, capacity: int = 1024, attr_dtypes: Optional[dict] = None, backend: str = 'numpy')
 ```
+
+- name: 关系名称。
+- capacity: 初始容量（默认 1024）。
+- attr_dtypes: 边属性字典，键为属性名，值为 dtype。
+- backend: 计算后端，支持 'numpy'（默认）/ 'torch' / 'mlx' / 'jax' / 'auto'。
 
 常用方法（用户层）
 
@@ -218,5 +249,72 @@ view['w'] = 100.0
 
 - 该模块以 `RECS` 作为唯一对外主入口，便于统一维护。
 - 对外暴露的类型与接口旨在尽量贴合 NumPy 的索引/赋值语义，降低学习成本。
+- 多后端架构：默认 NumPy 后端零退化兼容；可选 PyTorch/MLX/JAX 后端按需加载。
+
+
+## 后端工具函数（Backend Utilities）
+
+### recs.backends
+
+```python
+from recs.backends import get_backend, list_backends
+```
+
+- **list_backends() -> list[str]**
+  - 返回当前所有已注册（可用）的后端名称列表，例如 `['numpy', 'torch', 'mlx', 'jax']`。
+
+- **get_backend(name: str = 'numpy') -> BackendBase**
+  - 获取指定名称的后端实例。
+  - `name='auto'` 时自动选择最优可用后端（优先级：mlx > torch > jax > numpy）。
+  - 当指定后端未安装/不可用时抛出 `ValueError`。
+
+### BackendBase 接口
+
+`BackendBase` 是定义在 `recs/backends/base.py` 中的抽象基类，所有后端共享约 28 个数组操作原语：
+
+```python
+# 元信息
+backend.name     # → 'numpy' | 'torch' | 'mlx' | 'jax'
+backend.device   # → 'cpu' | 'mps'
+
+# 数组创建
+backend.empty(shape, dtype)
+backend.zeros(shape, dtype)
+backend.ones(shape, dtype)
+backend.full(shape, fill_value, dtype)
+backend.arange(start, stop, step, dtype)
+backend.array(data, dtype)
+
+# 数组操作
+backend.where(condition, x, y)
+backend.concatenate(arrays, axis=0)
+backend.copy(arr)
+backend.asarray(obj, dtype)
+backend.astype(arr, dtype)        # 跨后端类型转换
+
+# 索引与查询
+backend.nonzero(arr)
+backend.boolean_mask(arr, mask)
+backend.isin(elements, test_elements)
+
+# 聚合
+backend.bincount(indices, weights, minlength)
+backend.add_at(output, indices, values)
+backend.sum(arr, axis)
+backend.all(arr, axis)
+
+# 排序与唯一
+backend.argsort(arr, kind='stable')
+backend.unique(arr)
+
+# 类型转换
+backend.to_numpy(arr)             # → np.ndarray
+backend.from_numpy(np_arr)        # → backend array
+
+# 设备管理
+backend.to_device(arr, device)    # 'cpu' / 'gpu' / 'mps'
+backend.cpu(arr)
+backend.gpu(arr)
+```
 
 

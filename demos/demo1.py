@@ -3,7 +3,16 @@
 @Desc   : RECS demo: RECS + relation extension examples.
 """
 
+import sys
+from pathlib import Path
 import numpy as np
+
+# 允许直接运行本 demo：把仓库根目录加入 sys.path
+this_file = Path(__file__).resolve()
+repo_root = this_file.parents[1]  # .../relation-entity-component-system
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
 from recs import RECS  # #NOTE 导入 RECS 主入口。不能改动该行!
 
 # 1. 初始化 RECS 引擎，初始容量为 4，包含自定义属性 position（float）和 velocity（float）

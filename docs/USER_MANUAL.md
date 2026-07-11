@@ -26,7 +26,23 @@
 环境与依赖
 
 - Python 3.8+
-- NumPy 1.20+
+- NumPy 1.20+（必需，始终作为默认后端）
+
+可选加速后端（按需安装）：
+
+```bash
+# PyTorch 后端 — 支持 MPS (Apple Silicon GPU) / CUDA
+pip install "recs[torch]"
+
+# MLX 后端 — Apple Silicon 统一内存，零拷贝
+pip install "recs[mlx]"
+
+# JAX 后端 — JIT 编译（仅只读操作）
+pip install "recs[jax]"
+
+# 或直接安装对应包
+pip install torch mlx jax
+```
 
 在 `relation-entity-component-system` 中，项目已经包含纯 Python 代码和示例。若你把本目录作为包使用，请确保你的环境已安装 NumPy：
 
@@ -176,3 +192,75 @@ sub_rel = rel.query(src_uid=uid1, edge_pred=(rel.get_attr('amount') > 1000), ret
 ```
 
 参考：更详细的 API 说明见 `docs/API_REFERENCE.md`（新增）
+
+## 多后端计算（Multi-Backend）
+
+RECS 支持在 NumPy（默认）、PyTorch、MLX、JAX 等多个计算后端上透明运行。
+
+### 选择后端
+
+创建引擎时传入 `backend` 参数即可：
+
+```python
+# NumPy 后端（默认，不传 backend 时自动使用）
+import numpy as np
+from recs import RECS
+
+r = RECS(64, {'x': float})          # 默认 numpy
+r = RECS(64, {'x': float}, backend='numpy')
+```
+
+```python
+# PyTorch 后端（需安装 torch）
+r = RECS(64, {'x': float}, backend='torch')
+# 数据自动存为 torch.Tensor（MPS 设备上）
+print(r.d['x'].device)  # → mps:0
+```
+
+```python
+# MLX 后端（需安装 mlx，仅 Apple Silicon）
+r = RECS(64, {'x': float}, backend='mlx')
+# 数据自动存为 mx.array（统一内存）
+```
+
+```python
+# JAX 后端（需安装 jax，仅只读操作）
+from recs.backends import get_backend
+b = get_backend('jax')
+arr = b.zeros(10, dtype=float)
+```
+
+```python
+# auto 模式：自动选择最优可用后端
+r = RECS(64, {'x': float}, backend='auto')
+```
+
+### 检查可用后端
+
+```python
+from recs.backends import list_backends, get_backend
+
+print(list_backends())           # → ['numpy', 'torch', 'mlx', 'jax']
+b = get_backend('numpy')
+print(b.name, b.device)          # → numpy cpu
+```
+
+### 跨后端数据导出
+
+```python
+# 无论使用哪个后端，都可以导出为 NumPy 数组
+r = RECS(64, {'x': float}, backend='torch')
+r.add(3, x=[1.0, 2.0, 3.0])
+out = r.to_numpy()               # → {'x': np.ndarray}
+print(out['x'])                  # → [1. 2. 3.]
+```
+
+### 后端兼容性说明
+
+| 后端 | 状态 | 设备 | 字符串列 | 写入 | 备注 |
+|------|------|------|----------|------|------|
+| numpy | ✅ 生产就绪 | CPU | ✅ 原生支持 | ✅ 完整 | 默认，零依赖 |
+| torch | ✅ 生产就绪 | MPS/CUDA | ✅ 自动路由 NumPy | ✅ 完整 | 推荐 GPU 加速 |
+| mlx | ✅ 生产就绪 | MPS | ✅ 自动路由 NumPy | ✅ 完整 | Apple Silicon 优化 |
+| jax | ⚠️ 只读 | CPU | ❌ | ❌ 不可变数组 | 仅后端级查询 |
+| tensorflow | ❌ 不可用 | — | — | — | Python 3.14 不兼容 |
