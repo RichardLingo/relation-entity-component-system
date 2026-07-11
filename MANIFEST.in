@@ -1,0 +1,3 @@
+include docs/*
+include CHANGELOG.md
+include LICENSE
