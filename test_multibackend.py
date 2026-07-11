@@ -13,7 +13,7 @@ import numpy as np
 
 # 多后端 RECS 引擎
 from recs.backends import get_backend, list_backends
-from ecs.ecsengine import RECS, EntityPool, Relation
+from ecs.engine import RECS, EntityPool, Relation
 
 print("=" * 60)
 print("RECS 多后端计算架构测试")

@@ -59,7 +59,11 @@ python demos\demo1.py
 python demos\demo2.py
 ```
 
-概览（概念）
+
+
+
+
+# 概览（概念）
 
 - 实体（Entity）：由 `EntityPool` 管理，具有唯一的 uid（字段 `i`）与启用标志 `o`。实体数据以列（每列为 ndarray）的形式存储。
 - 组件/属性（Attributes）：每个属性是 `EntityPool.d` 或 `Relation.d` 中的一列 ndarray，可动态添加。
@@ -193,7 +197,7 @@ sub_rel = rel.query(src_uid=uid1, edge_pred=(rel.get_attr('amount') > 1000), ret
 
 参考：更详细的 API 说明见 `docs/API_REFERENCE.md`（新增）
 
-## 多后端计算（Multi-Backend）
+# 多后端计算（Multi-Backend）
 
 RECS 支持在 NumPy（默认）、PyTorch、MLX、JAX 等多个计算后端上透明运行。
 

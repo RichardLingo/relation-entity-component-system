@@ -111,6 +111,9 @@ class NumpyBackend(BackendBase):
     def argsort(self, arr, kind='stable'):
         return np.argsort(arr, kind=kind)
 
+    def flip(self, arr):
+        return np.flip(arr)
+
     def unique(self, arr):
         return np.unique(arr)
 

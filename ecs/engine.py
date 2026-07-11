@@ -548,7 +548,15 @@ class Relation:
         if self.backend.is_integer(arr.dtype):
             return self.backend.astype(arr, int)
 
-        raise TypeError(f"Unsupported index type: {type(idx)}")
+        # 回退：尝试通过字符串检测 dtype（兼容 MLX 等后端）
+        try:
+            dtype_str = str(arr.dtype).lower()
+            if 'int' in dtype_str and 'bool' not in dtype_str:
+                return self.backend.astype(arr, int)
+        except (TypeError, ValueError):
+            pass
+
+        raise TypeError(f"Unsupported index type: {type(idx)} (dtype={arr.dtype})")
 
     def indices_from_uid(self, src_uid):
         return self.backend.nonzero(self.d['src_uid'][:self.size] == src_uid)
@@ -558,10 +566,11 @@ class Relation:
 
     def take(self, idx):
         idxs = self._to_indices(idx)
-        if idxs.size == 0:
+        idxs_len = idxs.shape[0] if hasattr(idxs, 'shape') else len(idxs)
+        if idxs_len == 0:
             return Relation(self.name, capacity=4, backend=self.backend.name)
         attr_dtypes = {k: v.dtype for k, v in self.d.items() if k not in ('src_uid', 'dst_uid')}
-        rel = Relation(self.name, capacity=max(8, idxs.size), attr_dtypes=attr_dtypes, backend=self.backend.name)
+        rel = Relation(self.name, capacity=max(8, idxs_len), attr_dtypes=attr_dtypes, backend=self.backend.name)
         src_u = self.d['src_uid'][idxs]
         dst_u = self.d['dst_uid'][idxs]
         attrs = {k: v[idxs] for k, v in self.d.items() if k not in ('src_uid', 'dst_uid')}
@@ -657,7 +666,10 @@ class Relation:
     def argsort_by(self, name, ascending: bool = True):
         arr = self.get_attr(name)
         order = self.backend.argsort(arr, kind='stable')
-        return order if ascending else order[::-1]
+        if not ascending:
+            # 使用 flip 反转，兼容 PyTorch/MLX/JAX
+            order = self.backend.flip(order)
+        return order
 
     def sort_by(self, name, ascending: bool = True):
         order = self.argsort_by(name, ascending=ascending)
@@ -674,6 +686,9 @@ class Relation:
     @staticmethod
     def build_uid_to_pos(uid_array) -> np.ndarray:
         """构建 uid 到位置的映射数组（静态方法，始终使用 NumPy）。"""
+        # 使用 to_numpy 兼容多后端（如 PyTorch MPS）
+        if hasattr(uid_array, 'device') and hasattr(uid_array, 'cpu'):
+            uid_array = uid_array.cpu().numpy()
         uids = np.asarray(uid_array, dtype=np.int64)
         if uids.size == 0:
             return np.empty(0, dtype=int)
@@ -683,8 +698,9 @@ class Relation:
         return uid_to_pos
 
     @staticmethod
-    def _map_uids_to_pos(uids: np.ndarray, uid_to_pos):
+    def _map_uids_to_pos(uids, uid_to_pos):
         """将 uid 数组映射为位置数组（静态方法，始终使用 NumPy）。"""
+        uids = np.asarray(uids, dtype=np.int64)
         if isinstance(uid_to_pos, dict):
             return np.fromiter((uid_to_pos.get(int(u), -1) for u in uids), dtype=int, count=uids.size)
         arr = np.asarray(uid_to_pos)
@@ -695,14 +711,14 @@ class Relation:
         return out
 
     def _bincount(self, uid_field: str, attr_name: Optional[str], uid_to_pos, n_out: Optional[int]):
-        uids = self.d[uid_field][:self.size]
+        uids = self.backend.to_numpy(self.d[uid_field][:self.size])
         pos = self._map_uids_to_pos(uids, uid_to_pos)
         valid = pos >= 0
         if n_out is None:
             n_out = int(pos[valid].max()) + 1 if np.any(valid) else 0
         weights = None
         if attr_name is not None:
-            weights = self.d[attr_name][:self.size][valid]
+            weights = self.backend.to_numpy(self.d[attr_name][:self.size])[valid]
         return np.bincount(pos[valid], weights=weights, minlength=int(n_out))
 
     def row_sum(self, attr_name: str, src_uid_to_pos, n_rows: Optional[int] = None):
@@ -764,13 +780,16 @@ class Relation:
                 return None
             # 单个 uid
             if isinstance(u, (int, np.integer)):
-                return self.d[field][:size] == int(u)
+                result = self.d[field][:size] == int(u)
+                return self.backend.to_numpy(result)
             # 多个 uid：OR
             arr = np.asarray(u, dtype=np.int64)
             # 空集合：直接无结果
             if arr.size == 0:
                 return np.zeros(size, dtype=bool)
-            return np.isin(self.d[field][:size], arr)
+            # 使用后端 to_numpy 转换，兼容 MPS/CUDA
+            field_arr = self.backend.to_numpy(self.d[field][:size])
+            return np.isin(field_arr, arr)
 
         # uid 条件（索引层）
         m = _uid_or_mask('src_uid', src_uid)
@@ -783,7 +802,7 @@ class Relation:
         # 边属性谓词（查询层）
         if edge_pred is not None:
             em = edge_pred(self) if callable(edge_pred) else edge_pred
-            em = np.asarray(em, dtype=bool)
+            em = self.backend.to_numpy(em).astype(bool)
             if em.shape[0] != size:
                 raise ValueError(f"edge_pred 掩码长度必须等于 relation.size ({size})")
             mask &= em
@@ -913,8 +932,9 @@ def dense_to_relation(mat: np.ndarray, src_pool, dst_pool=None, rel_name: str = 
         dst_pool = src_pool
     if mat.ndim != 2:
         raise ValueError("mat 必须是二维数组")
-    src_uids = np.asarray(src_pool.d['i'][:src_pool.size], dtype=np.int64)
-    dst_uids = np.asarray(dst_pool.d['i'][:dst_pool.size], dtype=np.int64)
+    # 使用后端 to_numpy 转换，兼容 MPS/CUDA 等设备
+    src_uids = np.asarray(src_pool.backend.to_numpy(src_pool.d['i'][:src_pool.size]), dtype=np.int64)
+    dst_uids = np.asarray(dst_pool.backend.to_numpy(dst_pool.d['i'][:dst_pool.size]), dtype=np.int64)
     if mat.shape[0] != src_uids.shape[0] or mat.shape[1] != dst_uids.shape[0]:
         raise ValueError("矩阵维度必须与源/目的实体数量匹配")
 

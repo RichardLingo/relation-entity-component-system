@@ -213,6 +213,10 @@ class JAXBackend(BackendBase):
         jnp = self._jnp
         return jnp.argsort(arr)
 
+    def flip(self, arr):
+        jnp = self._jnp
+        return jnp.flip(arr)
+
     def unique(self, arr):
         jnp = self._jnp
         return jnp.unique(arr)

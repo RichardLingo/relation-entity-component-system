@@ -136,6 +136,10 @@ class BackendBase(ABC):
         """返回排序索引。"""
 
     @abstractmethod
+    def flip(self, arr: Any) -> Any:
+        """反转数组元素顺序。"""
+
+    @abstractmethod
     def unique(self, arr: Any) -> Any:
         """返回去重后的唯一元素。"""
 

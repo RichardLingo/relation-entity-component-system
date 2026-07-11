@@ -2,13 +2,13 @@
 
 说明
 ----
-核心实现收敛到 `ecsengine.py`。
+核心实现收敛到 `engine.py`。
 推荐用法：
 
 - `from recs import RECS, Relation`
 """
 
-from .ecsengine import (
+from .engine import (
     RECS,
     EntityPool,
     EntityPoolView,

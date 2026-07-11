@@ -221,6 +221,10 @@ class TFBackend(BackendBase):
         tf = self._tf
         return tf.argsort(arr, stable=(kind == 'stable'))
 
+    def flip(self, arr):
+        tf = self._tf
+        return tf.reverse(arr, axis=[0])
+
     def unique(self, arr):
         tf = self._tf
         result, _ = tf.unique(tf.reshape(arr, [-1]))

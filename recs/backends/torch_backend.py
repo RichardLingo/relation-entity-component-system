@@ -212,6 +212,9 @@ class TorchBackend(BackendBase):
     def argsort(self, arr, kind='stable'):
         return self._torch.argsort(arr, stable=(kind == 'stable'))
 
+    def flip(self, arr):
+        return self._torch.flip(arr, dims=[0])
+
     def unique(self, arr):
         return self._torch.unique(arr)
 

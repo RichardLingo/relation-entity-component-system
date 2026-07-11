@@ -126,7 +126,8 @@ class MLXBackend(BackendBase):
 
     def asarray(self, obj, dtype=None):
         mx = self._mx
-        if isinstance(obj, mx.array.__class__):
+        # 检测 MLX 数组：检查是否有 mlx 特有的属性
+        if hasattr(obj, 'dtype') and hasattr(obj, 'shape') and type(obj).__module__.startswith('mlx'):
             arr = obj
         elif isinstance(obj, np.ndarray):
             arr = mx.array(obj)
@@ -223,6 +224,10 @@ class MLXBackend(BackendBase):
         mx = self._mx
         return mx.argsort(arr)
 
+    def flip(self, arr):
+        # MLX 没有 flip 方法，使用切片反转
+        return arr[::-1]
+
     def unique(self, arr):
         mx = self._mx
         # MLX 没有 unique，用排序 + 去重实现
@@ -285,6 +290,10 @@ class MLXBackend(BackendBase):
         mx = self._mx
         if hasattr(mx, 'Dtype') and isinstance(dtype, mx.Dtype):
             return dtype in (mx.int8, mx.int16, mx.int32, mx.int64, mx.uint8)
+        # 通过字符串匹配检测 MLX dtype（兼容不同 MLX 版本）
+        dtype_str = str(dtype).lower()
+        if 'int' in dtype_str and 'bool' not in dtype_str:
+            return True
         try:
             return np.issubdtype(dtype, np.integer)
         except (TypeError, ValueError):

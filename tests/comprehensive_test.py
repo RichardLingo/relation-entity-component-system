@@ -88,7 +88,7 @@ for bk in available:
         continue  # JAX 数组不可变，跳过写操作测试
     def make_test(bk=bk):
         def _test():
-            from ecs.ecsengine import EntityPool, RECS
+            from ecs.engine import EntityPool, RECS
             # RECS 级别
             r = RECS(16, {'x': float, 'y': float}, backend=bk)
             r.add(5, x=[1.0, 2.0, 3.0, 4.0, 5.0], y=[10.0, 20.0, 30.0, 40.0, 50.0])
@@ -146,7 +146,7 @@ for bk in available:
         continue  # JAX 数组不可变，跳过写操作测试
     def make_test(bk=bk):
         def _test():
-            from ecs.ecsengine import RECS
+            from ecs.engine import RECS
             r = RECS(16, {'name': 'U10', 'tag': 'U5', 'val': float}, backend=bk)
             r.add(4, name=['A', 'B', 'C', 'D'], tag=['x', 'y', 'z', 'w'], val=[1.0, 2.0, 3.0, 4.0])
             assert r.size == 4
@@ -171,7 +171,7 @@ print()
 print("=== 4. 边缘情况 ===")
 
 def test_empty_pool():
-    from ecs.ecsengine import RECS
+    from ecs.engine import RECS
     r = RECS(16, {'x': float})
     assert r.size == 0
     idxs = r.query(return_='indices')
@@ -180,7 +180,7 @@ def test_empty_pool():
 test("空池操作", test_empty_pool)
 
 def test_single_element():
-    from ecs.ecsengine import RECS
+    from ecs.engine import RECS
     r = RECS(16, {'x': float})
     r.add(1, x=[42.0])
     assert r.size == 1
@@ -190,7 +190,7 @@ def test_single_element():
 test("单元素池", test_single_element)
 
 def test_large_capacity():
-    from ecs.ecsengine import RECS
+    from ecs.engine import RECS
     r = RECS(1024, {'x': float})
     r.add(1000, x=np.random.randn(1000).tolist())
     assert r.size == 1000
@@ -198,7 +198,7 @@ def test_large_capacity():
 test("大容量池 (1000 实体)", test_large_capacity)
 
 def test_bool_mask_query():
-    from ecs.ecsengine import RECS
+    from ecs.engine import RECS
     r = RECS(16, {'x': float})
     r.add(5, x=[1.0, 2.0, 3.0, 4.0, 5.0])
     mask = np.array([True, False, True, False, True])
@@ -208,7 +208,7 @@ test("布尔掩码查询", test_bool_mask_query)
 
 def test_remove_disable():
     """remove = disable，size 不变但标记为 inactive"""
-    from ecs.ecsengine import RECS
+    from ecs.engine import RECS
     r = RECS(16, {'x': float})
     r.add(3, x=[1.0, 2.0, 3.0])
     r.remove([0, 1, 2])
@@ -226,7 +226,7 @@ print("=== 5. Relation 操作 ===")
 for bk in available:
     def make_test(bk=bk):
         def _test():
-            from ecs.ecsengine import Relation
+            from ecs.engine import Relation
             rel = Relation('test', capacity=32, attr_dtypes={'weight': float, 'label': 'U5'}, backend=bk)
             rel.add([0, 1, 2], [1, 2, 0], weight=[0.5, 0.8, 0.3], label=['a', 'b', 'c'])
             assert rel.size == 3
@@ -261,7 +261,7 @@ for bk in available:
         continue  # JAX 数组不可变，跳过
     def make_test(bk=bk):
         def _test():
-            from ecs.ecsengine import RECS
+            from ecs.engine import RECS
             np.random.seed(42)
             data = np.random.randn(10)
             r = RECS(32, {'x': float}, backend=bk)
@@ -274,7 +274,7 @@ for bk in available:
 
 # 跨后端 to_numpy 一致性
 def test_cross_backend_consistency():
-    from ecs.ecsengine import RECS
+    from ecs.engine import RECS
     np.random.seed(42)
     data = np.random.randn(10)
     ref = None
@@ -315,7 +315,7 @@ for bk in available:
         continue  # JAX 只读，跳过
     def make_test(bk=bk, N=N):
         def _test():
-            from ecs.ecsengine import RECS
+            from ecs.engine import RECS
             t0 = time.perf_counter()
             r = RECS(N, {'x': float, 'y': float}, backend=bk)
             r.add(N, x=np.random.randn(N).tolist(), y=np.random.randn(N).tolist())
