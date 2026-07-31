@@ -1,5 +1,37 @@
 # 变更日志
 
+本文件记录每个版本发生了什么。若某个版本包含用户写法变化、默认行为变化或破坏性变更，请同时更新：
+
+- [迁移指南](MIGRATION_GUIDE.md)：说明用户代码如何从旧写法迁移到新写法。
+- [API 弃用策略](DEPRECATION_POLICY.md)：说明废弃、兼容期和移除规则。
+- [发布检查清单](RELEASE_CHECKLIST.md)：发版前确认文档、warning、demo 和测试已同步。
+
+## 未发布
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Deprecated
+
+- 
+
+### Removed
+
+- 
+
+### Fixed
+
+- 
+
+### Migration
+
+- 如本版本包含用户可见写法变化，在此链接到 `docs/MIGRATION_GUIDE.md` 中对应条目。
+
 ## 2026-06-23
 
 ### 新增：多后端计算架构（v0.2）

@@ -110,6 +110,11 @@ python .\demos\demo1.py
 
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — 开发者指南：架构说明、主要数据结构、扩容策略、示例代码与故障排查。
 - [USER_MANUAL.md](docs/USER_MANUAL.md) — 用户手册：快速上手、依赖说明、API 参考与常见示例。
+- [API_REFERENCE.md](docs/API_REFERENCE.md) — API 参考：当前推荐 API、参数和返回值说明。
+- [CHANGELOG.md](docs/CHANGELOG.md) — 变更日志：每个版本的新增、修改、弃用、移除和修复。
+- [MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) — 迁移指南：当 API 或语法糖变化时，给出旧写法到新写法的对照。
+- [DEPRECATION_POLICY.md](docs/DEPRECATION_POLICY.md) — API 弃用策略：弃用周期、运行时 warning 和移除规则。
+- [RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) — 发布检查清单：发版前确认文档、demo、测试和 release notes。
 - [PRD.md](docs/PRD.md) — 产品需求文档：目标、用例、功能/非功能需求与路线图。
 
 你可以直接在本地打开或在编辑器中查看这些文档，例如在 Windows PowerShell 中：
