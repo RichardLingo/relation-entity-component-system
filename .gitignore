@@ -1777,3 +1777,6 @@ docs/mailbox/relay/archive/
 
 # mailbox/relay — 治理信箱已迁出仓库（2026-10-05）
 docs/mailbox/relay/
+
+# 联合体治理：机器生成的导航附件，仅含本机绝对路径，不入库（2026-10-05）
+WORKSPACE_GUIDE.md

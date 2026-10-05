@@ -14,9 +14,7 @@
 ## 禁止与易踩坑
 <!-- TODO: 禁改目录、易踩坑、通用性红线等 -->
 
-## 工作区地图（移动端速查，详情见 WORKSPACE_GUIDE.md）
+## 项目结构（速查，详情见 WORKSPACE_GUIDE.md）
 
-- 📁 项目 · relation-entity-component-system → `/Users/ethan/CoreFiles/ProjectsFile/relation-entity-component-system`
-- 📓 笔记 · RECS → `/Users/ethan/Library/Mobile Documents/iCloud~md~obsidian/Documents/Engs_notebook/Projects/关联实体组件系统`
-- 🤖 AI Agent · agents → `/Users/ethan/.copilot/agents`
-- 🛠️ AI Skills · skills → `/Users/ethan/.copilot/skills`
+- 💻 本项目 · relation-entity-component-system → `./`
+

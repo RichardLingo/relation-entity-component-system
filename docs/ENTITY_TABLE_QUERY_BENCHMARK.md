@@ -67,7 +67,7 @@ idxs = np.nonzero(mask)[0]
 在 Windows PowerShell：
 
 ```powershell
-$env:PYTHONPATH = "C:\Users\Ethan\CoreFiles\ProjectsFile\relation-entity-component-system"
+$env:PYTHONPATH = "<本仓库根目录的绝对路径>"
 python .\demos\demo2.py
 ```
 

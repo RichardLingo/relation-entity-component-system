@@ -94,7 +94,7 @@ active_indices = recs_engine.get_active_indices()
 - 以包方式运行或确保 Python 能找到 `recs` 包：将仓库根目录加入 `PYTHONPATH`，例如（Windows PowerShell）：
 
 ```powershell
-$env:PYTHONPATH = "C:\Users\Ethan\CoreFiles\ProjectsFile\relation-entity-component-system"
+$env:PYTHONPATH = "<本仓库根目录的绝对路径>"
 python .\demos\demo1.py
 ```
 
