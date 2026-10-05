@@ -129,7 +129,7 @@ notepad .\docs\USER_MANUAL.md
 
 更多相关资料
 ------------
-- [图数据结构与算法综述（notes/graph_structures_and_algorithms.md）](../../../../../../ES_notebook/Projects/RECS/notes/graph_structures_and_algorithms.md)
+- [图数据结构与算法综述（notes/graph_structures_and_algorithms.md）](../../../../../../ES_notebook/Projects/关联实体组件系统/notes/graph_structures_and_algorithms.md)
 
 注意事项
 --------
