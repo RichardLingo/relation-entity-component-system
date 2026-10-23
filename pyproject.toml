@@ -18,6 +18,7 @@ mlx = ["mlx>=0.10"]
 jax = ["jax>=0.4", "jaxlib>=0.4"]
 tf = ["tensorflow>=2.12"]
 all = ["recs[torch,mlx,jax,tf]"]
+dev = ["pytest>=8.0"]
 
 [project.urls]
 Source = "https://github.com/RichardLingo/entity-relation-system-kit"
@@ -26,3 +27,9 @@ Issues = "https://github.com/RichardLingo/entity-relation-system-kit/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["ecs*", "recs*"]
+
+[tool.pytest.ini_options]
+# 仅收集 test_*.py；保留旧 smoke_test.py / comprehensive_test.py 为可独立运行的遗留脚本（含 import 期副作用，不入 pytest 收集）
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
